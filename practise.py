@@ -44,54 +44,51 @@ class WebScraper:
             """, unsafe_allow_html=True)
         st.title("Let's create the data")
         st.markdown("---")
-        with st.form("Form1"):
-            st.markdown('<h3 style="text-align:center; font-size: 30px; font-weight: bold;"> DATA RESEMBLANCE</h3>',
-                        unsafe_allow_html=True)
-            st.markdown('<p style="font-size: 25px; font-weight: bold;">ENTER THE URL OF THE WEBSITE YOU WANT TO '
-                        'SCRAPE:</p>', unsafe_allow_html=True)
-            self.link = st.text_input("LINK", key="website_url")
-            st.markdown("---")
-            st.markdown('<p style="font-size: 25px; font-weight: bold;">ENTER THE EXAMPLE OF DATA YOU WANT TO SCRAPE '
-                        ':</p>', unsafe_allow_html=True)
-            text = st.text_area("ENTER THE SAME AND UNIQUE VALUES FOR PROPER SCRAPING OF DATA (SEPARATE IT WITH A COMMA)", height=200)
-            self.wanted_list = text.split(',')
-            st.header("Tag Details")
-            st.write("Specify the details for each tag you want to scrape.")
+        
+        st.markdown('<h3 style="text-align:center; font-size: 30px; font-weight: bold;"> DATA RESEMBLANCE</h3>',
+                    unsafe_allow_html=True)
+        st.markdown('<p style="font-size: 25px; font-weight: bold;">ENTER THE URL OF THE WEBSITE YOU WANT TO '
+                    'SCRAPE:</p>', unsafe_allow_html=True)
+        self.link = st.text_input("LINK", key="website_url")
+        st.markdown("---")
+        st.markdown('<p style="font-size: 25px; font-weight: bold;">ENTER THE EXAMPLE OF DATA YOU WANT TO SCRAPE '
+                    ':</p>', unsafe_allow_html=True)
+        text = st.text_area("ENTER THE SAME AND UNIQUE VALUES FOR PROPER SCRAPING OF DATA (SEPARATE IT WITH A COMMA)", height=200)
+        self.wanted_list = text.split(',')
+        st.header("Tag Details")
+        st.write("Specify the details for each tag you want to scrape.")
 
-            tag_details_list = []
+        tag_details_list = []
 
-            tag_index = 0
-            while st.checkbox(f"Add Tag {tag_index + 1}",key="dj"):
-                with st.expander(f"Tag {tag_index + 1} Details"):
-                    tag_name = st.selectbox("Select Tag Name", ['div', 'span', 'a', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'table', 'tr', 'td', 'th', 'img', 'form', 'input', 'button', 'textarea'], key=f"tag_name_{tag_index}")
-                    id_or_class = st.radio("Select Id or Class", ["id", "class"], key=f"id_or_class_{tag_index}")
-                    class_name = st.text_input("Enter Id or Class Name", key=f"class_name_{tag_index}")
-                    find_method = st.radio("Select Find Method", ["find", "find_all"], key=f"find_method_{tag_index}")
-                    other_info = st.text_input("Enter Other Info (if any)", key=f"other_info_{tag_index}")
+        tag_index = 0
+        while st.checkbox(f"Add Tag {tag_index + 1}", key=f"add_tag_{tag_index}"):
+            with st.expander(f"Tag {tag_index + 1} Details"):
+                tag_name = st.selectbox("Select Tag Name", ['div', 'span', 'a', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'table', 'tr', 'td', 'th', 'img', 'form', 'input', 'button', 'textarea'], key=f"tag_name_{tag_index}")
+                id_or_class = st.radio("Select Id or Class", ["id", "class"], key=f"id_or_class_{tag_index}")
+                class_name = st.text_input("Enter Id or Class Name", key=f"class_name_{tag_index}")
+                find_method = st.radio("Select Find Method", ["find", "find_all"], key=f"find_method_{tag_index}")
 
-                tag_details = TagDetails(tag_name, id_or_class,class_name,find_method,other_info)
+                tag_details = TagDetails(tag_name, id_or_class, class_name, find_method)
                 tag_details_list.append(tag_details)
 
-                tag_index += 1
+            tag_index += 1
 
+        st.markdown('<p style="font-size: 25px; font-weight: bold;">IN WHAT WAY WOULD YOU LIKE TO REPRESENT YOUR '
+                    'DATA :</p>', unsafe_allow_html=True)
+        
+        self.genre = st.radio(
+            "ENTER THE DATA FORMAT",
+            ["**SCATTERED**", "**GROUPED**"],
+            index=None,
+            key="radio_genre"
+        )
 
+        if st.button("Let's Scrape !!!"):
+            self.scrape_data()
 
-            st.markdown('<p style="font-size: 25px; font-weight: bold;">IN WHAT WAY WOULD YOU LIKE TO REPRESENT YOUR '
-                        'DATA :</p>', unsafe_allow_html=True)
-            
-            self.genre = st.radio(
-                "ENTER THE DATA FORMAT",
-                ["**SCATTERED**", "**GROUPED**"],
-                index=None,
-                key="radio_genre"
-            )
-
-            submit = st.form_submit_button("Let's Scrape !!!")
-
-            if submit:
-                self.scrape_data()
         if st.button('Show Tag Details'):
             self.display_selected_tags(tag_details_list)
+
     def display_selected_tags(tag_details_list):
         if not tag_details_list:
             st.write("No tags selected.")
