@@ -1,10 +1,14 @@
 from autoscraper import AutoScraper
 from playwright.sync_api import sync_playwright
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
 from bs4 import BeautifulSoup
 import requests
 import streamlit as st
 import validators
 import logging
+import json
     
 # Configure logging
 logging.basicConfig(filename='scraping.log', level=logging.ERROR,
@@ -17,11 +21,10 @@ class MyException(Exception):
         logging.error(message)
 
 class TagDetails:
-    def __init__(self, tag_name, id_or_class, class_name, find_method):
+    def __init__(self, tag_name, id_or_class, class_name):
         self.tag_name = tag_name
         self.id_or_class = id_or_class
         self.class_name = class_name
-        self.find_method = find_method
 
 class WebScraper:
     def __init__(self):
@@ -58,68 +61,119 @@ class WebScraper:
         st.header("Tag Details")
         st.write("Specify the details for each tag you want to scrape.")
 
-        tag_details_list = []
 
         tag_index = 0
+        tag_details_list = []
         while st.checkbox(f"Add Tag {tag_index + 1}", key=f"add_tag_{tag_index}"):
             with st.expander(f"Tag {tag_index + 1} Details"):
                 tag_name = st.selectbox("Select Tag Name", ['div', 'span', 'a', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'table', 'tr', 'td', 'th', 'img', 'form', 'input', 'button', 'textarea'], key=f"tag_name_{tag_index}")
                 id_or_class = st.radio("Select Id or Class", ["id", "class"], key=f"id_or_class_{tag_index}")
                 class_name = st.text_input("Enter Id or Class Name", key=f"class_name_{tag_index}")
-                find_method = st.radio("Select Find Method", ["find", "find_all"], key=f"find_method_{tag_index}")
+                tag_details = TagDetails(tag_name, id_or_class, class_name)
 
-                tag_details = TagDetails(tag_name, id_or_class, class_name, find_method)
                 tag_details_list.append(tag_details)
 
             tag_index += 1
 
-        st.markdown('<p style="font-size: 25px; font-weight: bold;">IN WHAT WAY WOULD YOU LIKE TO REPRESENT YOUR '
-                    'DATA :</p>', unsafe_allow_html=True)
+        if st.button("Save Tag Details"):
+            self.save_tag_details(tag_details_list)
+            st.success("Tag details saved successfully!")
         
-        self.genre = st.radio(
-            "ENTER THE DATA FORMAT",
-            ["**SCATTERED**", "**GROUPED**"],
-            index=None,
-            key="radio_genre"
-        )
 
         if st.button("Let's Scrape !!!"):
             self.scrape_data()
 
-        if st.button('Show Tag Details'):
-            self.display_selected_tags(tag_details_list)
+    import json
 
-    def display_selected_tags(tag_details_list):
-        if not tag_details_list:
-            st.write("No tags selected.")
-        else:
-            for index, tag_details in enumerate(tag_details_list, start=1):
-                st.write(f"Tag {index} details:",tag_details_list)
-                st.write("")
+    def save_tag_details(self, tag_details):
+        tag_details_dicts = []
+        for tag_detail_obj in tag_details:
+            tag_details_dicts.append({
+                "tag_name": tag_detail_obj.tag_name,
+                "id_or_class": tag_detail_obj.id_or_class,
+                "class_name": tag_detail_obj.class_name,
+            })
+        with open("tag_details.json", "w") as file:
+            json.dump({"tags": tag_details_dicts}, file, indent=4)
 
+    def read_tag_details(self):
+        try:
+            with open("tag_details.json") as file:
+                return json.load(file)
+        except FileNotFoundError:
+            return []
+        
     def complex_data_scraping(self,url,response):
+        options = Options()
+        options.headless = True
         try:
             # using this to get flexibility with the browser and get the html content if the user-agent fails
-            with sync_playwright() as p:
-                browser = p.chromium.launch()
-                page = browser.new_page()
-                page.goto(url)
-                html_content = page.content().decode("utf-8")  # Decode bytes to string
-                print(html_content)
-                browser.close()
-            # build the scraper
-            result=self.scraper.build(html=html_content,wanted_list=self.wanted_list)
-            if self.genre == "**SCATTERED**":
-                st.write(result)
-            elif self.genre == "**GROUPED**":   
-                # st.write(grouped_info)
-                pass
-            else:
-                raise MyException("Failed to fetch the webpage. Status code: {}".format(response.status_code))
+            # with sync_playwright() as p:
+            #     browser = p.chromium.launch()
+            #     page = browser.new_page()
+            #     page.goto(url)
+            #     html_content = page.content().decode("utf-8")  # Decode bytes to string
+                driver = webdriver.Chrome(options=options)
+                driver.get(url)
+                # to give page loading time
+                wait = WebDriverWait(driver, 10)  # Adjust the timeout as needed
+
+                html_content = driver.page_source
+                soup=BeautifulSoup(html_content,"html.parser") 
+                driver.quit()
+                self.using_soup(soup)
+            
         except Exception as e:
             self.handle_exception("An error occured during Scraping",e)
 
-    
+    def using_soup(self, soup):
+        data = self.read_tag_details()
+        try:
+            index=0
+            div_elements = soup.find_all(data['tags'][index]['tag_name'], class_=data['tags'][index]['class_name'])
+
+            # Iterate through each div element
+            for div in div_elements:
+                try:
+                    # Try to find span element with the specified class for product name
+                    product_name_span = div.find(data['tags'][index+1]['tag_name'], data['tags'][index+1]['class_name'])
+                    if product_name_span:
+                        product_name = product_name_span.get_text(strip=True)
+                        st.write( product_name)
+                    else:
+                        product_name = ""
+                except ZeroDivisionError:
+                    # Handle ZeroDivisionError if it occurs
+                    print("ZeroDivisionError occurred")
+        except Exception as e:
+            self.handle_exception("An error occured during Scraping",e)
+
+
+    #     try:
+    #     div_elements = soup.find_all(data['tags'][index]['tag_name'], class_=data['tags'][index]['class_name'])
+    #     # Iterate through each div element
+    #     for div in div_elements:
+    #         try:
+    #             # Try to find the next tag element based on its details
+    #             next_tag_name = data['tags'][index + 1]['tag_name']
+    #             next_class_name = data['tags'][index + 1]['class_name']
+    #             next_element = div.find(next_tag_name, class_=next_class_name)
+    #             if next_element:
+    #                 product_name = next_element.get_text(strip=True)
+    #                 print("Product Name:", product_name)
+    #             else:
+    #                 print("Product Name not found.")
+    #         except IndexError:
+    #             # Handle the case when there's no more tag details to process
+    #             print("No more tag details to process.")
+    #             break
+    #         except Exception as e:
+    #             # Handle other exceptions
+    #             print(f"An error occurred: {e}")
+    # except Exception as e:
+    #     # Handle exceptions related to finding the initial div elements
+    #     print(f"An error occurred: {e}")
+
     def scrape_data(self): 
         if not validators.url(self.link):
             st.error("Please provide a valid URL.")
@@ -139,20 +193,16 @@ class WebScraper:
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.37'}
             response=requests.get(self.link,headers=headers)
             if response.status_code != 200:
-                # set up selenium driver
+                # set up selenium driver 
                 return self.complex_data_scraping(self.link,response)
 
             html_content = response.content.decode('utf-8')
             result=self.scraper.build(html=html_content,wanted_list=self.wanted_list)
-            # grouped_info = self.scraper.get_result_similar(self.link, grouped=True)
-
-            if self.genre == "**SCATTERED**":
-                st.write(result)
-            elif self.genre == "**GROUPED**":   
-                # st.write(grouped_info)
-                pass
+            if not result:
+                soup = BeautifulSoup(html_content, "html.parser")
+                self.using_soup(soup)
             else:
-                raise MyException("Not able to scrape data .Plz check your provided details again !!!")
+                st.write(result)
         except Exception as e:
             self.handle_exception("An error occured during Scraping",e)
 
