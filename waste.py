@@ -25,7 +25,7 @@ else:
 
 # Find all div elements with the specified class
 div_elements = soup.find_all("div", class_="puis-card-container s-card-container s-overflow-hidden aok-relative puis-include-content-margin puis puis-v1vrzjn78dyt752h9j3p7fl64h2 s-latency-cf-section puis-card-border")
-
+print(div_elements)
 # Iterate through each div element
 for div in div_elements:
     try:

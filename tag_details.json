@@ -1,0 +1,14 @@
+{
+    "tags": [
+        {
+            "tag_name": "div",
+            "id_or_class": "class",
+            "class_name": "puis-card-container s-card-container s-overflow-hidden aok-relative puis-include-content-margin puis puis-v1vrzjn78dyt752h9j3p7fl64h2 s-latency-cf-section puis-card-border"
+        },
+        {
+            "tag_name": "span",
+            "id_or_class": "class",
+            "class_name": "a-size-medium a-color-base a-text-normal"
+        }
+    ]
+}
