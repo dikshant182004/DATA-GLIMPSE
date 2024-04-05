@@ -4,6 +4,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from bs4 import BeautifulSoup
+import pandas as pd
 import openpyxl
 import requests
 import streamlit as st
@@ -129,19 +130,38 @@ class WebScraper:
 
     def using_soup(self, soup):
         data = self.read_tag_details()
+        scraped_data=[]
         try:
             index=0
             div_elements = soup.find_all(data['tags'][index]['tag_name'], class_=data['tags'][index]['class_name'])
-            self.iterate_over_span_tag(div_elements,index+1,data)
+            self.iterate_over_span_tag(div_elements,index+1,data,scraped_data)
             # Iterate through each div element
+            # Convert scraped data into a pandas DataFrame
+            df = pd.DataFrame(scraped_data)
+
+            # Prompt user to choose the output format
+            output_format = st.radio("Select output format:", ["Excel (xlsx)", "CSV", "JSON"])
+            
+            if output_format == "Excel (xlsx)":
+                # Save the DataFrame to an Excel file
+                df.to_excel('scraped_data.xlsx', index=False)
+                print("Scraped data saved to scraped_data.xlsx")
+            elif output_format == "CSV":
+                # Save the DataFrame to a CSV file
+                df.to_csv('scraped_data.csv', index=False)
+                print("Scraped data saved to scraped_data.csv")
+            elif output_format == "JSON":
+                # Save the DataFrame to a JSON file
+                df.to_json('scraped_data.json', orient='records', lines=True)
+                print("Scraped data saved to scraped_data.json")
         except Exception as e:
             self.handle_exception("An error occured during Scraping",e)
 
 
-    def iterate_over_span_tag(self,div_elements,index,data):
-        if index >= len(data['tags']):
-        # No more tag details to process
-            return
+    def iterate_over_span_tag(self,div_elements,index,data,scraped_data):
+        # if index >= len(data['tags']):
+        # # No more tag details to process
+        #     return
         for div in div_elements:
             try:
                 # Try to find span element with the specified class for product name
@@ -152,6 +172,7 @@ class WebScraper:
                     if (index+1) < len(data['tags']):
                         # using recursion
                         self.iterate_over_span_tag(div_elements,index+1,data)
+                        scraped_data.append({'Product Name': product_name})
 
                 else:
                     product_name = ""
