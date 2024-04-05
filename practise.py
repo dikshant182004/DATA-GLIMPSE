@@ -4,6 +4,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from bs4 import BeautifulSoup
+import openpyxl
 import requests
 import streamlit as st
 import validators
@@ -107,7 +108,7 @@ class WebScraper:
         options = Options()
         options.headless = True
         try:
-            # using this to get flexibility with the browser and get the html content if the user-agent fails
+            # using this to get flexibility with the browser and get the html content if the selenium fails
             # with sync_playwright() as p:
             #     browser = p.chromium.launch()
             #     page = browser.new_page()
@@ -131,49 +132,37 @@ class WebScraper:
         try:
             index=0
             div_elements = soup.find_all(data['tags'][index]['tag_name'], class_=data['tags'][index]['class_name'])
-
+            self.iterate_over_span_tag(div_elements,index+1,data)
             # Iterate through each div element
-            for div in div_elements:
-                try:
-                    # Try to find span element with the specified class for product name
-                    product_name_span = div.find(data['tags'][index+1]['tag_name'], data['tags'][index+1]['class_name'])
-                    if product_name_span:
-                        product_name = product_name_span.get_text(strip=True)
-                        st.write( product_name)
-                    else:
-                        product_name = ""
-                except ZeroDivisionError:
-                    # Handle ZeroDivisionError if it occurs
-                    print("ZeroDivisionError occurred")
         except Exception as e:
             self.handle_exception("An error occured during Scraping",e)
 
 
-    #     try:
-    #     div_elements = soup.find_all(data['tags'][index]['tag_name'], class_=data['tags'][index]['class_name'])
-    #     # Iterate through each div element
-    #     for div in div_elements:
-    #         try:
-    #             # Try to find the next tag element based on its details
-    #             next_tag_name = data['tags'][index + 1]['tag_name']
-    #             next_class_name = data['tags'][index + 1]['class_name']
-    #             next_element = div.find(next_tag_name, class_=next_class_name)
-    #             if next_element:
-    #                 product_name = next_element.get_text(strip=True)
-    #                 print("Product Name:", product_name)
-    #             else:
-    #                 print("Product Name not found.")
-    #         except IndexError:
-    #             # Handle the case when there's no more tag details to process
-    #             print("No more tag details to process.")
-    #             break
-    #         except Exception as e:
-    #             # Handle other exceptions
-    #             print(f"An error occurred: {e}")
-    # except Exception as e:
-    #     # Handle exceptions related to finding the initial div elements
-    #     print(f"An error occurred: {e}")
+    def iterate_over_span_tag(self,div_elements,index,data):
+        if index >= len(data['tags']):
+        # No more tag details to process
+            return
+        for div in div_elements:
+            try:
+                # Try to find span element with the specified class for product name
+                product_name_span = div.find(data['tags'][index]['tag_name'], data['tags'][index]['class_name'])
+                if product_name_span:
+                    product_name = product_name_span.get_text(strip=True)
+                    st.write( product_name)
+                    if (index+1) < len(data['tags']):
+                        # using recursion
+                        self.iterate_over_span_tag(div_elements,index+1,data)
 
+                else:
+                    product_name = ""
+            except IndexError:
+#             # Handle the case when there's no more tag details to process
+                print("No more tag details to process.")
+                break
+            except ZeroDivisionError:
+                print("ZeroDivisionError occurred")
+
+    #        
     def scrape_data(self): 
         if not validators.url(self.link):
             st.error("Please provide a valid URL.")
