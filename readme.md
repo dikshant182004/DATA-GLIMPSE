@@ -59,6 +59,11 @@ Suppose you want to scrape product information from Amazon. Here's how you can u
    - Container class (should be a `<div>` tag with the class or id information).
 
     - - Example: `<div class="puis-card-container s-card-container s-overflow-hidden aok-relative puis-include-content-margin puis puis-vbok7i09ua2q62ek5q2l21tt78 s-latency-cf-section puis-card-border">`
+     
+      - ## Application Screenshot
+
+        (https://example.com/path/to/your/screenshot.png)
+
 
    - Other relevant tags like `<span>` and `<a>` with class and ID attributes.
   
