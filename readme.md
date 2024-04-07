@@ -15,8 +15,9 @@ To run Data Glimpse, ensure you have Python 3.x installed on your system. Then, 
 
 1. Clone this repository:
 
+    ```bash
     git clone https://github.com/dikshant182004/Data-Glimpse.git
-
+    ```
 
 2. Navigate to the project directory:
 
