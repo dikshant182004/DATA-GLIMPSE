@@ -1,0 +1,11 @@
+AutoScraper
+playwright.sync_api 
+selenium 
+BeautifulSoup
+pandas
+requests
+validators
+logging
+json
+streamlit
+streamlit_lottie

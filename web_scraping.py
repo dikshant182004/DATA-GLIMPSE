@@ -5,7 +5,6 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from bs4 import BeautifulSoup
 import pandas as pd
-import openpyxl
 import requests
 import streamlit as st
 import validators
@@ -60,14 +59,14 @@ class WebScraper:
                     ':</p>', unsafe_allow_html=True)
         text = st.text_area("ENTER THE SAME AND UNIQUE VALUES FOR PROPER SCRAPING OF DATA (SEPARATE IT WITH A COMMA)", height=200)
         self.wanted_list = text.split(',')
-        st.header("Tag Details")
-        st.write("Specify the details for each tag you want to scrape.")
+        st.header("TAG DETAILS")
+        st.write("SPECIFY THE DETAILS FOR EACH TAG YOU WANT TO SCRAPE.")
 
 
         tag_index = 0
         tag_details_list = []
-        while st.checkbox(f"Add Tag {tag_index + 1}", key=f"add_tag_{tag_index}"):
-            with st.expander(f"Tag {tag_index + 1} Details"):
+        while st.checkbox(f"ADD TAG {tag_index + 1}", key=f"add_tag_{tag_index}"):
+            with st.expander(f"TAG {tag_index + 1} DETAILS"):
                 tag_name = st.selectbox("Select Tag Name", ['div', 'span', 'a', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'table', 'tr', 'td', 'th', 'img', 'form', 'input', 'button', 'textarea'], key=f"tag_name_{tag_index}")
                 id_or_class = st.radio("Select Id or Class", ["id", "class"], key=f"id_or_class_{tag_index}")
                 class_name = st.text_input("Enter Id or Class Name", key=f"class_name_{tag_index}")
@@ -77,12 +76,12 @@ class WebScraper:
 
             tag_index += 1
 
-        if st.button("Save Tag Details"):
+        if st.button("SAVE TAG DETAILS"):
             self.save_tag_details(tag_details_list)
-            st.success("Tag details saved successfully!")
+            st.success("TAG DETAILS SAVED SUCCESSFULLY !!!")
         
 
-        if st.button("Let's Scrape !!!"):
+        if st.button("LET'S SCRAPE !!!"):
             self.scrape_data()
 
     import json
@@ -115,6 +114,8 @@ class WebScraper:
             #     page = browser.new_page()
             #     page.goto(url)
             #     html_content = page.content().decode("utf-8")  # Decode bytes to string
+                
+                # using selenium and chrome as a driver
                 driver = webdriver.Chrome(options=options)
                 driver.get(url)
                 # to give page loading time
@@ -133,57 +134,73 @@ class WebScraper:
         scraped_data=[]
         try:
             index=0
-            div_elements = soup.find_all(data['tags'][index]['tag_name'], class_=data['tags'][index]['class_name'])
-            self.iterate_over_span_tag(div_elements,index+1,data,scraped_data)
-            # Iterate through each div element
-            # Convert scraped data into a pandas DataFrame
-            df = pd.DataFrame(scraped_data)
+            if data['tags'][index]['id_or_class'] =="class":
+                div_elements = soup.find_all(data['tags'][index]['tag_name'], class_=data['tags'][index]['class_name'])
 
-            # Prompt user to choose the output format
-            output_format = st.radio("Select output format:", ["Excel (xlsx)", "CSV", "JSON"])
+            elif data['tags'][index]['id_or_class'] == "id":
+                div_elements = soup.find_all(data['tags'][index]['tag_name'], id=data['tags'][index]['class_name'])
+
+            self.iterate_over_span_tag(div_elements,index+1,data,scraped_data)
+            st.write(scraped_data)
+
+            # Convert scraped data into a pandas DataFrame
+            self.save_data_to_computer(scraped_data) 
             
-            if output_format == "Excel (xlsx)":
-                # Save the DataFrame to an Excel file
-                df.to_excel('scraped_data.xlsx', index=False)
-                print("Scraped data saved to scraped_data.xlsx")
-            elif output_format == "CSV":
-                # Save the DataFrame to a CSV file
-                df.to_csv('scraped_data.csv', index=False)
-                print("Scraped data saved to scraped_data.csv")
-            elif output_format == "JSON":
-                # Save the DataFrame to a JSON file
-                df.to_json('scraped_data.json', orient='records', lines=True)
-                print("Scraped data saved to scraped_data.json")
         except Exception as e:
             self.handle_exception("An error occured during Scraping",e)
 
-
     def iterate_over_span_tag(self,div_elements,index,data,scraped_data):
-        # if index >= len(data['tags']):
-        # # No more tag details to process
-        #     return
-        for div in div_elements:
+            specific_data=[]
             try:
+                for div in div_elements:
                 # Try to find span element with the specified class for product name
-                product_name_span = div.find(data['tags'][index]['tag_name'], data['tags'][index]['class_name'])
-                if product_name_span:
-                    product_name = product_name_span.get_text(strip=True)
-                    st.write( product_name)
-                    if (index+1) < len(data['tags']):
-                        # using recursion
-                        self.iterate_over_span_tag(div_elements,index+1,data)
-                        scraped_data.append({'Product Name': product_name})
+                    if data['tags'][index]['id_or_class'] == "class":
+                        product_name_span = div.find(data['tags'][index]['tag_name'],class_=data['tags'][index]['class_name'])
 
+                    elif data['tags'][index]['id_or_class'] == "id":
+                        product_name_span = div.find(data['tags'][index]['tag_name'], id=data['tags'][index]['class_name'])
+                    
+                    if product_name_span:
+                        product_name = product_name_span.get_text(strip=True)
+                        # st.write( product_name)
+                        specific_data.append(product_name)
+                scraped_data.append({f'DATA {index}': specific_data})
+
+                # using recursion
+                if (index+1) < len(data['tags']):
+                    self.iterate_over_span_tag(div_elements,index+1,data,scraped_data)
+
+                # No more tag details to process
+                if index > len(data['tags']):
+                    return
+                
                 else:
                     product_name = ""
             except IndexError:
-#             # Handle the case when there's no more tag details to process
+            # when there's no more tag details to process
                 print("No more tag details to process.")
-                break
             except ZeroDivisionError:
                 print("ZeroDivisionError occurred")
 
-    #        
+    def save_data_to_computer(self, scraped_data):
+        if not scraped_data:
+            st.error("No data to save.")
+            return
+
+        try:
+            data_dict = {}
+            for item in scraped_data:
+                for key, values in item.items():
+                    data_dict[key]=values
+
+            df = pd.DataFrame(data_dict)
+                
+            st.write(df)
+            st.success("THANKS FOR SCRAPING DATA 🖖")
+        except Exception as e:
+            st.error(f"An error occurred while saving data : {e}")
+
+
     def scrape_data(self): 
         if not validators.url(self.link):
             st.error("Please provide a valid URL.")
@@ -199,11 +216,12 @@ class WebScraper:
             #     "http": 'http://127.0.0.1:8001', 
             #     "https": 'https://127.0.0.1:8001',
             # }
+            
             headers = {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.37'}
             response=requests.get(self.link,headers=headers)
             if response.status_code != 200:
-                # set up selenium driver 
+                # set up selenium driver to get the html content
                 return self.complex_data_scraping(self.link,response)
 
             html_content = response.content.decode('utf-8')
