@@ -62,7 +62,7 @@ Suppose you want to scrape product information from Amazon. Here's how you can u
      
       - ## Application Screenshot
 
-        ([https://example.com/path/to/your/screenshot.png](https://github.com/dikshant182004/DATA-GLIMPSE/blob/main/Images/Screenshot%20(876).png))
+        ([https://github.com/dikshant182004/DATA-GLIMPSE/blob/main/Images/Screenshot%20(876).png])
 
 
    - Other relevant tags like `<span>` and `<a>` with class and ID attributes.
