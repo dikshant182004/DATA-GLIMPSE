@@ -2,7 +2,9 @@ from autoscraper import AutoScraper
 from playwright.sync_api import sync_playwright
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 import pandas as pd
 import requests
@@ -120,6 +122,7 @@ class WebScraper:
                 driver.get(url)
                 # to give page loading time
                 wait = WebDriverWait(driver, 10)  # Adjust the timeout as needed
+                wait.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
 
                 html_content = driver.page_source
                 soup=BeautifulSoup(html_content,"html.parser") 
