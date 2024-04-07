@@ -15,23 +15,23 @@ To run Data Glimpse, ensure you have Python 3.x installed on your system. Then, 
 
 1. Clone this repository:
 
-git clone https://github.com/dikshant182004/Data-Glimpse.git
+    git clone https://github.com/dikshant182004/Data-Glimpse.git
 
 
 2. Navigate to the project directory:
 
-cd Data-Glimpse
+    cd Data-Glimpse
 
 
 3. Install the required dependencies:
 
-pip install -r requirements.txt
+    pip install -r requirements.txt
 
 ## Usage
 
 1. Run the Streamlit application:
 
-streamlit run main.py
+    streamlit run main.py
 
 
 2. Input the website link you want to scrape data from.
@@ -54,7 +54,7 @@ Suppose you want to scrape product information from Amazon. Here's how you can u
    - Container class (should be a `<div>` tag with the class or id information).
 
     - - Example: `<div class="puis-card-container s-card-container s-overflow-hidden aok-relative puis-include-content-margin puis puis-vbok7i09ua2q62ek5q2l21tt78 s-latency-cf-section puis-card-border">`
-    
+
    - Other relevant tags like `<span>` and `<a>` with class and ID attributes.
 3. Click on "Scrape Data" to fetch and display the product information.
 4. Optionally, save the scraped data as a CSV file on your local machine.
