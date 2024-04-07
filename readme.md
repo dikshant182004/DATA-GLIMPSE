@@ -61,6 +61,9 @@ Suppose you want to scrape product information from Amazon. Here's how you can u
     - - Example: `<div class="puis-card-container s-card-container s-overflow-hidden aok-relative puis-include-content-margin puis puis-vbok7i09ua2q62ek5q2l21tt78 s-latency-cf-section puis-card-border">`
 
    - Other relevant tags like `<span>` and `<a>` with class and ID attributes.
+  
+   - - Example: `<span class ="a-size-medium a-color-base a-text-normal">`
+     - 
 3. Click on "Scrape Data" to fetch and display the product information.
 4. Optionally, save the scraped data as a CSV file on your local machine.
 
