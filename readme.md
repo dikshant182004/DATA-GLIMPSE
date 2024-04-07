@@ -63,7 +63,7 @@ Suppose you want to scrape product information from Amazon. Here's how you can u
    - Other relevant tags like `<span>` and `<a>` with class and ID attributes.
   
    - - Example: `<span class ="a-size-medium a-color-base a-text-normal">`
-     - 
+       
 3. Click on "Scrape Data" to fetch and display the product information.
 4. Optionally, save the scraped data as a CSV file on your local machine.
 
